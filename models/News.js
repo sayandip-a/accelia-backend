@@ -1,16 +1,52 @@
 const mongoose = require("mongoose");
+
 const NewsSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true, trim: true },
-    body: { type: String, required: true },
-    tag: { type: String, required: true, trim: true },
-    icon: { type: String, default: "📰" },
-    bg: { type: String, default: "linear-gradient(135deg,#1B8FA6,#0B1F3A)" },
-    imageUrl: { type: String, default: "" },
-    date: { type: String, required: true },
-    published: { type: Boolean, default: true },
-    author: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
-    views: { type: Number, default: 0 },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    content: {
+      type: String,
+      required: true, // 🔥 THIS WAS YOUR MAIN ERROR SOURCE
+    },
+
+    category: {
+      type: String,
+      default: "General",
+    },
+
+    tag: {
+      type: String,
+      default: "News",
+    },
+
+    date: {
+      type: Date,
+      default: Date.now,
+    },
+
+    imageUrl: {
+      type: String,
+      default: "",
+    },
+
+    published: {
+      type: Boolean,
+      default: false,
+    },
+
+    views: {
+      type: Number,
+      default: 0,
+    },
+
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
+    },
   },
   { timestamps: true },
 );

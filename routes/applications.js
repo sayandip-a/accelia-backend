@@ -5,8 +5,6 @@ const Application = require("../models/Application");
 const Job = require("../models/Job");
 const auth = require("../middleware/auth");
 const router = express.Router();
-
-// ── Multer: store file in memory (no disk/S3 needed) ──────────────────────────
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
@@ -24,8 +22,6 @@ const upload = multer({
     }
   },
 });
-
-// ── POST /api/applications  (public — candidate submits application) ───────────
 router.post("/", upload.single("cv"), async (req, res) => {
   try {
     const { jobId, jobTitle, department, location, name, email, phone } =
@@ -36,12 +32,8 @@ router.post("/", upload.single("cv"), async (req, res) => {
         .status(400)
         .json({ message: "jobId, name and email are required" });
     }
-
-    // Verify job exists
     const job = await Job.findById(jobId);
     if (!job) return res.status(404).json({ message: "Job not found" });
-
-    // Build CV payload
     let cvPayload = {};
     if (req.file) {
       cvPayload = {
@@ -62,8 +54,6 @@ router.post("/", upload.single("cv"), async (req, res) => {
       phone,
       cv: cvPayload,
     });
-
-    // Increment job application counter
     await Job.findByIdAndUpdate(jobId, { $inc: { applications: 1 } });
 
     res.status(201).json({
@@ -77,8 +67,6 @@ router.post("/", upload.single("cv"), async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-// ── GET /api/applications  (admin — list all, newest first) ───────────────────
 router.get("/", auth, async (req, res) => {
   try {
     const { jobId, status, page = 1, limit = 20 } = req.query;
@@ -93,7 +81,7 @@ router.get("/", auth, async (req, res) => {
         .skip(skip)
         .limit(Number(limit))
         .populate("job", "title dept location")
-        .select("-cv.data"), // don't send base64 in list view
+        .select("-cv.data"),
       Application.countDocuments(filter),
     ]);
 
@@ -102,8 +90,6 @@ router.get("/", auth, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-// ── GET /api/applications/:id  (admin — single application with CV) ────────────
 router.get("/:id", auth, async (req, res) => {
   try {
     const application = await Application.findById(req.params.id).populate(
@@ -117,8 +103,6 @@ router.get("/:id", auth, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-// ── GET /api/applications/:id/cv  (admin — download CV as original file) ───────
 router.get("/:id/cv", auth, async (req, res) => {
   try {
     const application = await Application.findById(req.params.id);
@@ -137,8 +121,6 @@ router.get("/:id/cv", auth, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-// ── PATCH /api/applications/:id/status  (admin — update status) ───────────────
 router.patch("/:id/status", auth, async (req, res) => {
   try {
     const { status } = req.body;
@@ -159,8 +141,6 @@ router.patch("/:id/status", auth, async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-// ── DELETE /api/applications/:id  (admin) ─────────────────────────────────────
 router.delete("/:id", auth, async (req, res) => {
   try {
     await Application.findByIdAndDelete(req.params.id);

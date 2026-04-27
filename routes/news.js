@@ -1,10 +1,7 @@
-// routes/news.js
 const express = require("express");
 const News = require("../models/News");
 const auth = require("../middleware/auth");
 const router = express.Router();
-
-// Public: GET all published news
 router.get("/", async (req, res) => {
   try {
     const { limit = 20, page = 1 } = req.query;
@@ -20,8 +17,6 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-// Public: GET single news
 router.get("/:id", async (req, res) => {
   try {
     const news = await News.findById(req.params.id).populate("author", "name");
@@ -32,8 +27,6 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-// Admin: CREATE
 router.post("/", auth, async (req, res) => {
   try {
     const news = await News.create({ ...req.body, author: req.admin._id });
@@ -42,8 +35,6 @@ router.post("/", auth, async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
-
-// Admin: UPDATE
 router.put("/:id", auth, async (req, res) => {
   try {
     const news = await News.findByIdAndUpdate(req.params.id, req.body, {
@@ -56,8 +47,6 @@ router.put("/:id", auth, async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
-
-// Admin: DELETE
 router.delete("/:id", auth, async (req, res) => {
   try {
     await News.findByIdAndDelete(req.params.id);
