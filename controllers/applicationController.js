@@ -4,6 +4,7 @@ const cloudinary = require("../config/cloudinary");
 exports.createApplication = async (req, res) => {
   try {
     console.log("FILE DEBUG:", req.file);
+    console.log("BODY DEBUG:", req.body);
 
     const { jobId, name, email, phone, experience, linkedin, coverLetter } =
       req.body;
