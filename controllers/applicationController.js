@@ -38,6 +38,7 @@ exports.createApplication = async (req, res) => {
 
     const application = await Application.create({
       job: jobId,
+      jobTitle: job.title,
       name,
       email,
       phone,
