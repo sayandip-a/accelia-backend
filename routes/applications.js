@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const upload = require("../middleware/upload");
+const auth = require("../middleware/auth");
 
 const {
   createApplication,
@@ -12,14 +13,14 @@ const {
   deleteApplication,
 } = require("../controllers/applicationController");
 
-// PUBLIC
+// ── PUBLIC ────────────────────────────────────────────────────────────────────
 router.post("/", upload.single("cv"), createApplication);
 
-// ADMIN
-router.get("/", getApplications);
-router.get("/:id", getApplicationById);
-router.get("/:id/cv", getCVUrl);
-router.patch("/:id/status", updateStatus);
-router.delete("/:id", deleteApplication);
+// ── ADMIN (protected) ─────────────────────────────────────────────────────────
+router.get("/", auth, getApplications);
+router.get("/:id", auth, getApplicationById);
+router.get("/:id/cv", auth, getCVUrl);
+router.patch("/:id/status", auth, updateStatus);
+router.delete("/:id", auth, deleteApplication);
 
 module.exports = router;
