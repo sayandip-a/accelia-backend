@@ -5,6 +5,10 @@ exports.createApplication = async (req, res) => {
   try {
     console.log("FILE DEBUG:", req.file);
     console.log("BODY DEBUG:", req.body);
+    console.log("jobId:", jobId);
+    const job = await Job.findById(jobId);
+    console.log("job found:", job);
+    console.log("job isActive:", job?.isActive);
 
     const { jobId, name, email, phone, experience, linkedin, coverLetter } =
       req.body;
