@@ -1,6 +1,7 @@
 const Application = require("../models/Application");
 const Job = require("../models/Job");
 const cloudinary = require("../config/cloudinary");
+
 exports.createApplication = async (req, res) => {
   try {
     console.log("FILE DEBUG:", req.file);
@@ -8,6 +9,7 @@ exports.createApplication = async (req, res) => {
 
     const { jobId, name, email, phone, experience, linkedin, coverLetter } =
       req.body;
+
     if (!jobId || !name || !email) {
       return res
         .status(400)
@@ -15,11 +17,15 @@ exports.createApplication = async (req, res) => {
     }
 
     const job = await Job.findById(jobId);
+    console.log("job found:", job);
+    console.log("isActive:", job?.isActive);
+
     if (!job) return res.status(404).json({ message: "Job not found" });
-    if (!job.isActive)
+    if (job.isActive === false)
       return res
         .status(400)
         .json({ message: "This job is no longer accepting applications" });
+
     const cv = req.file
       ? {
           url: req.file.path,
@@ -27,6 +33,9 @@ exports.createApplication = async (req, res) => {
           originalName: req.file.originalname,
         }
       : {};
+
+    console.log("Creating application...");
+
     const application = await Application.create({
       job: jobId,
       name,
@@ -38,6 +47,9 @@ exports.createApplication = async (req, res) => {
       cv,
       status: "new",
     });
+
+    console.log("Application created:", application._id);
+
     await Job.findByIdAndUpdate(jobId, { $inc: { applications: 1 } });
 
     res.status(201).json({
@@ -45,12 +57,15 @@ exports.createApplication = async (req, res) => {
       data: application,
     });
   } catch (err) {
+    console.log("ERROR MESSAGE:", err.message);
+    console.log("ERROR STACK:", err.stack);
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({ message: "File size must be under 5MB" });
     }
     res.status(500).json({ message: err.message });
   }
 };
+
 exports.getApplications = async (req, res) => {
   try {
     const { jobId, status, page = 1, limit = 20 } = req.query;
@@ -75,6 +90,7 @@ exports.getApplications = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 exports.getApplicationById = async (req, res) => {
   try {
     const app = await Application.findById(req.params.id).populate(
@@ -89,6 +105,7 @@ exports.getApplicationById = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 exports.getCVUrl = async (req, res) => {
   try {
     const app = await Application.findById(req.params.id);
@@ -102,6 +119,7 @@ exports.getCVUrl = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 exports.updateStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -126,6 +144,7 @@ exports.updateStatus = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 exports.updateNote = async (req, res) => {
   try {
     const { note } = req.body;
@@ -143,10 +162,12 @@ exports.updateNote = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 exports.deleteApplication = async (req, res) => {
   try {
     const app = await Application.findById(req.params.id);
     if (!app) return res.status(404).json({ message: "Not found" });
+
     if (app.cv?.public_id) {
       await cloudinary.uploader.destroy(app.cv.public_id, {
         resource_type: "raw",
@@ -154,6 +175,7 @@ exports.deleteApplication = async (req, res) => {
     }
 
     await Application.findByIdAndDelete(req.params.id);
+
     if (app.job) {
       await Job.findByIdAndUpdate(app.job, { $inc: { applications: -1 } });
     }
